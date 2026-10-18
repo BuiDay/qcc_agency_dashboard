@@ -1,0 +1,261 @@
+<title>Sơ đồ flow Agency Task</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: một cột tài liệu, mỗi phần = 1 sơ đồ + ghi chú ngắn; bảng/sơ đồ rộng cuộn ngang trong khung riêng */
+:root {
+  --bg: #f6f8f8;
+  --surface: #ffffff;
+  --fg: #16201f;
+  --muted: #5b6b69;
+  --line: #d9e2e1;
+  --accent: #0e6b68;
+  --accent-soft: #e2f1f0;
+  --warn: #a5560b;
+  --warn-soft: #fbefe2;
+  --ok: #2c7a3f;
+  --no: #b23a3a;
+  --c-admin: #6b4fbb;
+  --c-leader: #0e6b68;
+  --c-staff: #2f6db5;
+  --c-client: #b5662f;
+  --font-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101615; --surface: #172120; --fg: #e4ecea; --muted: #94a5a2; --line: #2a3836;
+    --accent: #5cc4bd; --accent-soft: #173533; --warn: #f0a85a; --warn-soft: #3a2a17;
+    --ok: #6fcf86; --no: #f08080;
+    --c-admin: #a891f0; --c-leader: #5cc4bd; --c-staff: #79aef0; --c-client: #eba06c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101615; --surface: #172120; --fg: #e4ecea; --muted: #94a5a2; --line: #2a3836;
+  --accent: #5cc4bd; --accent-soft: #173533; --warn: #f0a85a; --warn-soft: #3a2a17;
+  --ok: #6fcf86; --no: #f08080;
+  --c-admin: #a891f0; --c-leader: #5cc4bd; --c-staff: #79aef0; --c-client: #eba06c;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 960px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 40px; }
+header h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 8px; text-wrap: balance; font-weight: 700; }
+header p { margin: 0; color: var(--muted); max-width: 65ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.chip { font-family: var(--font-mono); font-size: 12px; letter-spacing: .02em; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.admin { color: var(--c-admin); } .chip.leader { color: var(--c-leader); } .chip.staff { color: var(--c-staff); } .chip.client { color: var(--c-client); }
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h2 { font-size: 1.3rem; margin: 0; text-wrap: balance; }
+section > p { margin: 0; color: var(--muted); max-width: 70ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; overflow-x: auto; }
+pre.mermaid { margin: 0; background: transparent; display: flex; justify-content: center; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 10px 14px; border-radius: 0 8px 8px 0; max-width: 75ch; }
+.note b { color: var(--warn); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-weight: 600; font-size: 13px; color: var(--muted); }
+td.c { text-align: center; font-variant-numeric: tabular-nums; }
+.y { color: var(--ok); font-weight: 600; } .n { color: var(--no); font-weight: 600; } .p { color: var(--warn); font-weight: 500; font-size: 13px; }
+/* Kanban: 8 cột, cuộn ngang trên điện thoại */
+.board { display: grid; grid-template-columns: repeat(8, minmax(118px, 1fr)); gap: 8px; min-width: 980px; }
+.col { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); }
+.col h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.col code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.drop { font-size: 12px; display: flex; gap: 6px; align-items: baseline; }
+.col.locked { border-style: dashed; }
+.status { font-family: var(--font-mono); font-size: 12px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Sơ đồ flow app quản lý task agency</h1>
+  <p>Bản chốt theo câu trả lời mới nhất: Admin tạo dự án và gán Leader, Leader giao việc cho nhân viên, nhân viên được kéo thả và được báo bận. Cổng khách hàng làm sau nhưng đã có chỗ trong flow.</p>
+  <div class="legend">
+    <span class="chip admin">Admin</span><span class="chip leader">Leader dự án</span><span class="chip staff">Nhân viên</span><span class="chip client">Khách hàng (sau)</span>
+  </div>
+</header>
+
+<section>
+  <span class="eyebrow">Sơ đồ 1</span>
+  <h2>Tổng quan: một hệ thống, hai khu vực</h2>
+  <p>Dùng chung một database. Khu nội bộ làm ngay, cổng khách hàng chỉ thêm giao diện ở giai đoạn sau.</p>
+  <div class="panel"><pre class="mermaid">
+flowchart TB
+  subgraph APP["Khu nội bộ /app (làm ngay)"]
+    AD["Admin<br/>quản trị toàn bộ"]
+    LD["Leader dự án<br/>quản lý dự án + khách hàng được gán"]
+    NV["Nhân viên<br/>Design · Edit video · Content · Thực thi"]
+  end
+  subgraph PORTAL["Cổng khách hàng /portal (giai đoạn sau)"]
+    KH["Khách hàng<br/>chỉ thấy bài cần duyệt của mình"]
+  end
+  DB[("Database chung<br/>khách hàng · dự án · task · bình luận · lịch sử")]
+  APP --> DB
+  PORTAL -->|"chỉ đọc task clientVisible<br/>và bình luận visibility = client"| DB
+  </pre></div>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 2</span>
+  <h2>Ai tạo gì, ai giao cho ai</h2>
+  <p>Theo đúng thứ tự thao tác khi bắt đầu một khách hàng mới.</p>
+  <div class="panel"><pre class="mermaid">
+flowchart LR
+  AD(["Admin"]) -->|"1. Tạo"| KH["Khách hàng"]
+  AD -->|"2. Tạo dự án<br/>(chọn template)"| DA["Dự án / Chiến dịch"]
+  KH --- DA
+  AD -->|"3. Gán Leader<br/>cho dự án"| LD(["Leader"])
+  LD -->|"4. Thêm nhân viên<br/>vào dự án"| TEAM["Thành viên dự án"]
+  LD -->|"5. Tạo task<br/>+ giao người"| T["Task"]
+  AD -.->|"cũng giao được"| T
+  T -->|"6. Thông báo"| NV(["Nhân viên"])
+  </pre></div>
+  <p>Leader phụ trách luôn khách hàng của dự án mình được gán. Một người có thể là Leader ở dự án A và nhân viên ở dự án B.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 3</span>
+  <h2>Vòng đời một task</h2>
+  <p>Có nhánh báo bận, nhánh trả về sửa nội bộ và nhánh khách yêu cầu sửa.</p>
+  <div class="panel"><pre class="mermaid">
+flowchart TD
+  A["Leader tạo task trong cột Brief<br/>brief · checklist · người làm · deadline · nhãn"] --> B{"Nhân viên<br/>tiếp nhận?"}
+  B -->|"Báo bận + lý do"| C["Leader nhận thông báo<br/>giao lại người khác"]
+  C --> B
+  B -->|"Tiếp nhận"| D["Lên ý tưởng / Sản xuất<br/>tick checklist, bình luận, upload nháp"]
+  D --> E["Nộp duyệt<br/>đính kèm file v1, v2, v3..."]
+  E --> F{"Leader<br/>duyệt nội bộ"}
+  F -->|"Trả về + góp ý"| G["Chỉnh sửa<br/>số lần sửa +1"]
+  G --> E
+  F -->|"Đạt"| H{"Khách duyệt<br/>đếm số ngày chờ"}
+  H -->|"Yêu cầu sửa"| G
+  H -->|"Duyệt"| I["Lên lịch đăng"]
+  I --> J["Hoàn thành"]
+  </pre></div>
+  <p>Ở MVP, Leader gửi bài cho khách qua Zalo rồi bấm "Khách đã duyệt" hoặc "Khách yêu cầu sửa". Khi có cổng khách hàng, khách tự bấm đúng hai nút đó, dữ liệu không đổi.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 4</span>
+  <h2>Trình tự trao đổi giữa các vai trò</h2>
+  <p>Ví dụ một bài post Facebook, từ lúc giao đến lúc đăng.</p>
+  <div class="panel"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant L as Leader
+  participant S as Hệ thống
+  participant N as Nhân viên
+  participant K as Khách hàng
+  L->>S: Tạo task, giao cho Nhân viên
+  S-->>N: Thông báo "Bạn được giao task"
+  alt Bận
+    N->>S: Báo bận + lý do
+    S-->>L: Thông báo, Leader giao lại
+  else Nhận việc
+    N->>S: Tiếp nhận
+    S-->>L: Thông báo "Đã tiếp nhận"
+  end
+  N->>S: Làm, tick checklist, nộp duyệt (file v1)
+  S-->>L: Thông báo "Có bài chờ duyệt"
+  L->>S: Trả về + góp ý
+  S-->>N: Thông báo "Bị trả về sửa"
+  N->>S: Nộp lại (file v2)
+  L->>S: Duyệt đạt, chuyển Khách duyệt
+  L->>K: Gửi bài (MVP qua Zalo, sau qua cổng)
+  K-->>L: Duyệt
+  L->>S: Ghi nhận "Khách đã duyệt", lên lịch đăng
+  S-->>N: Thông báo "Bài đã được duyệt"
+  </pre></div>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 5</span>
+  <h2>Kéo thả trên bảng Kanban</h2>
+  <p>Nhân viên được kéo thả task của mình. Admin và Leader kéo thả mọi task trong dự án.</p>
+  <div class="note"><b>Góp ý:</b> nếu nhân viên kéo được vào mọi cột thì có thể bỏ qua bước duyệt, ví dụ kéo thẳng sang "Hoàn thành". Tôi đề xuất khoá 3 cột cuối với nhân viên. Kéo vào cột khoá thì thẻ tự quay về chỗ cũ và hiện dòng "Cần Leader duyệt trước".</div>
+  <div class="panel">
+    <div class="board">
+      <div class="col"><h3>Brief</h3><code>brief</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="y">✓</span>NV</div></div>
+      <div class="col"><h3>Lên ý tưởng</h3><code>ideation</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="y">✓</span>NV</div></div>
+      <div class="col"><h3>Sản xuất</h3><code>production</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="y">✓</span>NV</div></div>
+      <div class="col"><h3>Duyệt nội bộ</h3><code>internal_review</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="y">✓</span>NV (= nộp duyệt)</div></div>
+      <div class="col locked"><h3>Khách duyệt</h3><code>client_review</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="n">✕</span>NV</div></div>
+      <div class="col"><h3>Chỉnh sửa</h3><code>revision</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="y">✓</span>NV</div></div>
+      <div class="col locked"><h3>Lên lịch đăng</h3><code>scheduled</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="n">✕</span>NV</div></div>
+      <div class="col locked"><h3>Hoàn thành</h3><code>done</code><div class="drop"><span class="y">✓</span>Leader</div><div class="drop"><span class="n">✕</span>NV</div></div>
+    </div>
+  </div>
+  <p>Tên cột đổi thoải mái, quyền kéo thả gắn theo mã trạng thái (dòng chữ nhỏ dưới tên cột). Thẻ của người khác thì nhân viên chỉ xem, không kéo được.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 6</span>
+  <h2>Ma trận quyền</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Hành động</th><th>Admin</th><th>Leader<br>(dự án mình)</th><th>Nhân viên</th><th>Khách (sau)</th></tr></thead>
+      <tbody>
+        <tr><td>Quản lý nhân sự, chuyên môn, cài đặt, bật/tắt module</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Tạo khách hàng, tạo dự án, gán Leader</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Thêm nhân viên vào dự án, sửa cột</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Xem dự án nội bộ</td><td class="c y">Tất cả</td><td class="c y">Tất cả</td><td class="c p">Tất cả, chỉ xem</td><td class="c p">Bài của mình</td></tr>
+        <tr><td>Tạo task, giao việc, sửa brief/deadline</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Tiếp nhận / báo bận</td><td class="c">–</td><td class="c">–</td><td class="c y">✓</td><td class="c n">✕</td></tr>
+        <tr><td>Tick checklist, upload file, nộp duyệt</td><td class="c y">✓</td><td class="c y">✓</td><td class="c p">Task của mình</td><td class="c n">✕</td></tr>
+        <tr><td>Kéo thả task</td><td class="c y">✓</td><td class="c y">✓</td><td class="c p">Task của mình, trừ 3 cột khoá</td><td class="c n">✕</td></tr>
+        <tr><td>Bình luận nội bộ</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td></tr>
+        <tr><td>Duyệt nội bộ / trả về sửa</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Ghi nhận khách duyệt / yêu cầu sửa</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td><td class="c p">Qua cổng</td></tr>
+        <tr><td>Lưu trữ task</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+        <tr><td>Xoá vĩnh viễn task</td><td class="c y">✓</td><td class="c n">✕</td><td class="c n">✕</td><td class="c n">✕</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Sơ đồ 7</span>
+  <h2>Quan hệ dữ liệu</h2>
+  <p>Các bảng chính và cách chúng nối với nhau. Mọi bảng đều có <span class="status">workspaceId</span> và <span class="status">clientId</span> để lọc quyền.</p>
+  <div class="panel"><pre class="mermaid">
+erDiagram
+  WORKSPACE ||--o{ MEMBER : "có nhân sự"
+  USER ||--o{ MEMBER : "là"
+  WORKSPACE ||--o{ CLIENT : "có khách"
+  CLIENT ||--o{ PROJECT : "có dự án"
+  PROJECT }o--o{ MEMBER : "leaderIds, memberIds"
+  PROJECT ||--o{ LIST : "có cột"
+  LIST ||--o{ TASK : "chứa"
+  TASK ||--o{ COMMENT : "bình luận"
+  TASK ||--o{ ATTACHMENT : "file v1, v2"
+  TASK ||--o{ ACTIVITY : "lịch sử"
+  ACTIVITY ||--o{ NOTIFICATION : "sinh thông báo"
+  MEMBER {
+    string role "admin | staff | client"
+    array skills "design, edit, content, thực thi"
+  }
+  PROJECT {
+    array leaderIds "Admin gán"
+    array memberIds "Leader thêm"
+  }
+  TASK {
+    string statusType "brief ... done"
+    object acceptance "pending | accepted | declined + lý do"
+    array checklist "mỗi mục có người làm"
+    array reviewHistory "nội bộ / khách, kết quả, góp ý"
+    number revisionCount "số lần sửa"
+  }
+  COMMENT {
+    string visibility "internal | client"
+  }
+  </pre></div>
+</section>
+
+<footer>Sơ đồ dựa trên các quyết định đã chốt trong cuộc trao đổi. Phần "khoá 3 cột cuối với nhân viên" là đề xuất, chờ anh/chị xác nhận.</footer>
+</div>
