@@ -1,0 +1,15 @@
+{
+  "name": "qcc-agency-dashboard",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "build:shared": "pnpm --filter @qcc/shared build",
+    "dev:api": "pnpm build:shared && pnpm --filter api dev",
+    "build:api": "pnpm build:shared && pnpm --filter api build",
+    "test:api": "pnpm --filter api test",
+    "seed": "pnpm build:shared && pnpm --filter api seed",
+    "seed:reset": "pnpm build:shared && pnpm --filter api seed:reset",
+    "test:smoke": "pnpm --filter api test:smoke",
+    "db:up": "docker compose up -d mongo"
+  }
+}

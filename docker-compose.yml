@@ -1,0 +1,11 @@
+# MongoDB chạy local cho môi trường dev: `pnpm db:up`
+services:
+  mongo:
+    image: mongo:7
+    container_name: qcc-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:

@@ -13,7 +13,14 @@ Bối cảnh chung xem CLAUDE.md ở gốc repo. File này là quy tắc riêng 
 - Task actions là endpoint riêng:
   POST /tasks/:id/accept, /decline, /submit, /review (nội bộ), /client-review, /move.
   /move kiểm tra quyền theo statusType cột đích (staff không vào client_review/scheduled/done → TASK_COLUMN_LOCKED).
-- position: fractional indexing (thư viện fractional-indexing).
+- position: fractional indexing, tự viết ở src/common/position.ts (thư viện fractional-indexing là ESM-only, không dùng).
+- Schema Mongoose: field ObjectId phải khai báo `type: SchemaTypes.ObjectId` (KHÔNG dùng `Types.ObjectId`,
+  nếu không Mongoose coi là Mixed và không tự ép kiểu id dạng string khi query).
+- Phân quyền: quy tắc nằm ở src/permissions/policy.ts (hàm thuần, có test). Service gọi `policy.assert(actor, action, ctx)`.
+- Quy trình trạng thái task: src/tasks/task-workflow.ts (hàm thuần, có test).
+- Mọi query lọc theo `workspaceId: actor.workspaceId`.
+- Kiểm thử end-to-end: apps/api/test/smoke.mjs (`pnpm seed:reset` rồi `pnpm test:smoke` khi API đang chạy).
+  Thêm endpoint mới thì thêm kịch bản vào đây.
 - Upload: API cấp presigned URL lên R2, client upload trực tiếp, rồi gọi API xác nhận (tạo attachment, version tự tăng).
 - Cron (@nestjs/schedule): nhắc sắp đến hạn, quá hạn, task chưa tiếp nhận sau 24h.
 - Validation: class-validator DTO. Swagger bật ở /docs để Frontend sinh type.
