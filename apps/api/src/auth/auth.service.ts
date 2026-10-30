@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcryptjs';
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,8 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectModel(User.name) private readonly users: Model<User>,
     @InjectModel(Member.name) private readonly members: Model<Member>,
@@ -81,6 +84,15 @@ export class AuthService {
         secret: refreshSecret,
       });
     } catch (error) {
+      const reason = error instanceof Error ? error.name : 'UnknownError';
+      if (
+        !['TokenExpiredError', 'JsonWebTokenError', 'NotBeforeError'].includes(
+          reason,
+        )
+      ) {
+        throw error;
+      }
+      this.logger.warn(`Refresh JWT verification failed (${reason}).`);
       throw new UnauthorizedException(ErrorCode.Unauthorized);
     }
     if (
@@ -88,19 +100,24 @@ export class AuthService {
       !Types.ObjectId.isValid(payload.memberId) ||
       !Types.ObjectId.isValid(payload.workspaceId)
     ) {
+      this.logger.warn('Refresh token rejected: malformed token claims.');
       throw new UnauthorizedException(ErrorCode.Unauthorized);
     }
-    const member = await this.members.findOne({
-      _id: payload.memberId,
-      userId: payload.sub,
-      workspaceId: payload.workspaceId,
-      active: true,
-    });
+    const member = await this.members.findById(payload.memberId).lean();
     const user = await this.users.findOne({
       _id: payload.sub,
       active: true,
     });
-    if (!member || !user) {
+    const memberMatchesClaims =
+      member !== null &&
+      member !== undefined &&
+      member.userId.toString() === payload.sub &&
+      member.workspaceId.toString() === payload.workspaceId &&
+      member.active;
+    if (!memberMatchesClaims || !user) {
+      this.logger.warn(
+        `Refresh token account check failed (memberIdExists=${Boolean(member)}, userMatches=${member ? member.userId.toString() === payload.sub : false}, workspaceMatches=${member ? member.workspaceId.toString() === payload.workspaceId : false}, memberActive=${member?.active ?? false}, userActive=${Boolean(user)}).`,
+      );
       throw new UnauthorizedException(ErrorCode.Unauthorized);
     }
     const claims = {
@@ -124,6 +141,11 @@ export class AuthService {
       .select('_id email name avatar')
       .lean();
     if (!user) throw new UnauthorizedException(ErrorCode.Unauthorized);
-    return { ...user, role: actor.role, workspaceId: actor.workspaceId };
+    return {
+      ...user,
+      memberId: actor.memberId,
+      role: actor.role,
+      workspaceId: actor.workspaceId,
+    };
   }
 }

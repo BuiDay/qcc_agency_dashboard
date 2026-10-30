@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -39,6 +40,12 @@ export class MembersService {
   async update(actor: Actor, memberId: string, dto: UpdateMemberDto) {
     if (!Types.ObjectId.isValid(memberId)) {
       throw new NotFoundException(ErrorCode.NotFound);
+    }
+    if (
+      memberId === actor.memberId &&
+      (dto.active === false || (dto.role !== undefined && dto.role !== actor.role))
+    ) {
+      throw new ForbiddenException(ErrorCode.Forbidden);
     }
     const member = await this.members
       .findOneAndUpdate(

@@ -12,17 +12,26 @@
 - Backend Projects API đã có tạo/list/detail/update/archive và thêm thành viên dự án; gán Leader/Member bằng userId thuộc workspace.
 - Backend có `POST /users` chỉ dành cho Admin, tạo user và membership cùng workspace; luồng `/members` dùng chung logic tạo tài khoản.
 - Auth API hỗ trợ access JWT qua cookie hoặc Bearer; login/refresh trả access token để client gửi `Authorization` khi không gửi cookie credentials.
-- Sửa Mongoose schema để lệnh seed nạp được model; xác nhận bước seed hiện dừng ở TLS handshake tới MongoDB Atlas, chưa tạo admin.
+- Backend Projects/Tasks API đã có CRUD project/task, thành viên dự án, workflow task, fractional position và activity log; thay đổi đã push trên branch `feat/task-api` (commit `58635b3`).
+- Đã sửa Mongoose schema để lệnh seed nạp model; build thành công và 13 unit test đạt. Seed vẫn chưa tạo admin do lỗi TLS handshake tới MongoDB Atlas.
 - Task được kiểm tra project tồn tại, cùng workspace, chưa archive; người được giao/cộng tác viên phải nằm trong project. Quyền Leader được giới hạn theo project thay cho quyền quản lý task workspace-wide.
+- UI/UX đã có [design system](./design/design-system.md) và [sitemap](./design/sitemap.md) cho desktop/mobile; cặp màu chủ đạo đã chốt là xanh lá `#d2fd4b` + xanh dương `#4f48e3`.
+- Đã đặc tả màn hình [Đăng nhập](./design/screens/dang-nhap.md) và [Việc của tôi](./design/screens/viec-cua-toi.md), gồm wireframe desktop/mobile, quyền, trạng thái và microcopy.
+- Đã đặc tả trang [Nhân sự](./design/screens/nhan-su.md): mọi Admin đều thấy tab trong điều hướng; Leader/Nhân viên không thấy, quyền truy cập vẫn do backend kiểm tra.
+- Đã triển khai frontend `/team`: danh sách nhân sự từ API, tìm kiếm/lọc, tạo user, đổi role, tạm ngưng/kích hoạt; tab chỉ hiện với Admin trên desktop/mobile. Backend dùng `GET/POST /members` và `PATCH /members/:id` hiện có; đã giới hạn đọc danh sách cho Admin, chặn Staff/Leader và ngăn Admin tự hạ quyền/tạm ngưng tài khoản của mình.
+- Sidebar và điều hướng mobile dùng component `AppNavigation` trong layout chung nhóm `(app)`; chuyển tab bằng Next.js Link nên shell không bị tải/mount lại. CSS responsive trang Nhân sự hoạt động bình thường trên desktop/mobile.
+- Frontend Next.js đã khởi tạo; `/login` gọi API auth thật; refresh cookie khôi phục phiên, access token chỉ giữ trong memory và nhóm route `(app)` được bảo vệ sau khi xác thực.
+- Frontend dùng same-origin `/api` rewrite; backend nhận alias cookie cũ `refresh_token`, chuẩn hóa sang `qcc_refresh`, và xóa cookie cũ/không hợp lệ khi refresh bị từ chối. Đã xác định `COOKIE_DOMAIN` local chứa scheme/port gây lỗi Express khi xóa cookie; backend giờ chuẩn hóa hostname và bỏ Domain cho localhost/IP. Người dùng cần đăng nhập lại sau khi API cập nhật để cookie refresh được cấp theo secret hiện tại.
+- Auth refresh và JWT strategy tra cứu member theo `_id` rồi xác thực riêng user/workspace/active. JWT strategy ưu tiên Bearer token mới khi request có cả Bearer và cookie access cũ; cookie vẫn là fallback. Khi request refresh không có cookie, backend không gửi lệnh xóa cookie để tránh race với login. Đã thêm unit test cho các luồng.
+- Trang “Việc của tôi” đã dựng theo đặc tả bằng mock data: nhóm theo hạn, lọc trạng thái/dự án, chi tiết task, tiếp nhận và báo bận.
 
 ## Đang làm
-- Xây dựng Clients/Lists API và quan hệ project-client nếu nghiệp vụ yêu cầu; hiện Project không phụ thuộc Client.
-- Tích hợp activity log với event/notification khi bổ sung các module liên quan.
-- Chuẩn bị base cho frontend khu nội bộ: layout, kanban, task detail, workload và "Việc của tôi".
+- Frontend: hoàn thiện luồng màn hình Việc của tôi và tiếp tục dựng Trang chủ Leader/Bảng Kanban bằng mock data; auth login, khôi phục phiên và bảo vệ route đã kết nối.
+- Các màn hình nghiệp vụ khác vẫn chưa kết nối API; ưu tiên hoàn thiện UI nội bộ trước.
 
 ## Tiếp theo
-1. Backend: thêm clients/lists và quan hệ client-project khi cần; Projects API hiện có dùng project làm container task.
-2. Backend: bổ sung comments, attachments, labels, templates, notifications; gắn activity log vào event flow.
-3. Frontend: khởi tạo app web, layout nội bộ, board Kanban kéo thả, chi tiết task, checklist, upload file, và màn hình workload.
-4. MVP 1b: lịch, danh sách, @mention, file đính kèm, thông báo, template.
-5. Sau đó: portal khách, workflow duyệt nhiều cấp, báo cáo và module mở rộng như chấm công / hợp đồng / automation.
+1. Đặc tả Trang chủ Leader và Bảng Kanban; dựng các màn hình bằng mock data.
+2. Dựng các màn hình nội bộ theo đặc tả, chưa tích hợp API.
+3. Sau khi UX/frontend đã sẵn sàng mới nối API và xử lý backend còn thiếu như Clients/Lists, comments, attachments, notifications, labels và templates.
+4. Trước khi mở `/portal`: bổ sung API và permission riêng cho `client`, lọc theo `clientIds` và `clientVisible`, giới hạn comment `visibility=client`; không dùng trực tiếp API task nội bộ cho khách.
+5. Sau MVP 1a: lịch, @mention, template; tiếp đó mới làm portal khách và các module mở rộng.

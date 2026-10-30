@@ -65,7 +65,7 @@ export class PolicyService {
 
     return (
       actor.role !== WorkspaceRole.Client &&
-      [Action.WorkspaceRead, Action.MembersRead].includes(action)
+      action === Action.WorkspaceRead
     );
   }
 

@@ -13,6 +13,8 @@ Base URL: `/api`. Swagger UI: `/docs`. API xác thực bằng cookie `qcc_access
 3. Tạo workspace và admin đầu tiên bằng `pnpm --filter @qcc/api seed`.
 4. Chạy API bằng `pnpm --filter @qcc/api dev`; mở Swagger tại `http://localhost:3001/docs`.
 5. Đăng nhập qua `POST /api/auth/login` với thông tin seed.
+6. Chạy frontend bằng `pnpm --filter @qcc/web dev` và mở
+   `http://localhost:3000/login`.
 
 Seed và API nạp cấu hình từ `apps/api/.env`. Không dùng secret/mật khẩu trong
 `.env.example` ở môi trường thật.
@@ -22,9 +24,12 @@ Seed và API nạp cấu hình từ `apps/api/.env`. Không dùng secret/mật k
 | Method | Endpoint | Request | Response | Lỗi chính |
 |---|---|---|---|---|
 | POST | `/auth/login` | `{ email, password }` | `{ accessToken, user, member }`; đặt access/refresh cookie | `UNAUTHORIZED`, `VALIDATION_FAILED` |
-| POST | `/auth/refresh` | refresh cookie | `{ success: true, accessToken }`; xoay token và cookie | `UNAUTHORIZED` |
-| POST | `/auth/logout` | — | `{ success: true }`; xóa cookie | — |
-| GET | `/auth/me` | access cookie | `{ _id, email, name, avatar, role, workspaceId }` | `UNAUTHORIZED` |
+| POST | `/auth/refresh` | cookie `qcc_refresh` (tạm nhận alias cũ `refresh_token`) | `{ success: true, accessToken }`; xoay token và cookie | `UNAUTHORIZED` |
+| POST | `/auth/logout` | — | `{ success: true }`; xóa cookie mới và alias cũ | — |
+| GET | `/auth/me` | access cookie hoặc Bearer token | `{ _id, email, name, avatar, role, workspaceId }` | `UNAUTHORIZED` |
+
+`GET /auth/me` trả `memberId` cùng `_id`, `email`, `name`, `avatar`, `role` và
+`workspaceId`; frontend dùng dữ liệu này để khôi phục membership sau refresh.
 
 ## Người dùng, workspace và thành viên
 
@@ -33,12 +38,26 @@ Seed và API nạp cấu hình từ `apps/api/.env`. Không dùng secret/mật k
 | GET | `/users/me` | thành viên đã đăng nhập | thông tin hồ sơ hiện tại | `UNAUTHORIZED`, `NOT_FOUND` |
 | POST | `/users` | admin | `{ email, name, password, role }` → `{ user, member }`; tạo user và gắn vào workspace hiện tại | `CONFLICT`, `FORBIDDEN`, `VALIDATION_FAILED` |
 | GET | `/workspaces/current` | thành viên workspace | workspace hiện tại và `modules` | `FORBIDDEN`, `NOT_FOUND` |
-| GET | `/members` | admin/staff | danh sách thành viên cùng workspace | `FORBIDDEN` |
+| GET | `/members` | admin | danh sách thành viên cùng workspace | `FORBIDDEN` |
 | POST | `/members` | admin | `{ email, name, password, role }` → member mới (tạo user kèm theo, giữ tương thích) | `CONFLICT`, `VALIDATION_FAILED` |
-| PATCH | `/members/:id` | admin | `{ role?, active? }` | `NOT_FOUND`, `VALIDATION_FAILED` |
+| PATCH | `/members/:id` | admin | `{ role?, active? }` | Không cho Admin tự hạ quyền hoặc tạm ngưng chính mình; `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_FAILED` |
 
 Admin đầu tiên được tạo bằng lệnh `pnpm --filter @qcc/api seed`; lệnh yêu cầu
 cấu hình seed trong `.env` và không ghi đè email đã tồn tại.
+
+Frontend gọi API qua same-origin proxy `/api` của Next.js; proxy chuyển tiếp
+đến `NEXT_PUBLIC_API_URL` (mặc định `http://localhost:3001/api`). Cookie
+httpOnly vì thế được gửi cùng origin, còn access token chỉ giữ trong React
+memory và không lưu localStorage. Backend ưu tiên `qcc_refresh`, đồng thời
+chấp nhận cookie cũ `refresh_token` để chuyển phiên hiện hữu sang tên chuẩn
+khi refresh thành công. Khi khởi động, frontend gọi refresh rồi
+`GET /auth/me` để khôi phục phiên; các trang nội bộ thuộc nhóm route `(app)`
+chỉ render sau khi xác thực. Refresh tự chạy trước khi access token hết hạn.
+`COOKIE_DOMAIN` chỉ nên là hostname/URL chứa hostname; giá trị localhost/IP
+được bỏ qua để dùng host-only cookie.
+Nếu API chạy ở URL khác,
+sao chép `apps/web/.env.example` thành `apps/web/.env.local`, cập nhật URL rồi
+khởi động lại frontend.
 
 Với client không dùng cookie, lấy `accessToken` từ login, gửi header
 `Authorization: Bearer <accessToken>` cho các API cần đăng nhập; sau khi refresh

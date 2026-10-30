@@ -11,17 +11,24 @@ describe('PolicyService', () => {
     role: WorkspaceRole.Staff,
   };
 
-  it('cho phép staff đọc thành viên cùng workspace nhưng không tạo thành viên', () => {
+  it('chỉ Admin được đọc và quản lý danh sách thành viên workspace', () => {
     expect(
       policy.can(staff, Action.MembersRead, {
         workspaceId: staff.workspaceId,
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       policy.can(staff, Action.MembersCreate, {
         workspaceId: staff.workspaceId,
       }),
     ).toBe(false);
+    expect(
+      policy.can(
+        { ...staff, role: WorkspaceRole.Admin },
+        Action.MembersRead,
+        { workspaceId: staff.workspaceId },
+      ),
+    ).toBe(true);
   });
 
   it('chỉ Admin được tạo user trong workspace', () => {

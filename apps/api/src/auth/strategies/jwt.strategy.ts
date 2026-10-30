@@ -14,12 +14,11 @@ interface JwtRequest {
 }
 
 export function extractAccessToken(request: JwtRequest): string | null {
-  const cookieToken = request.cookies?.qcc_access;
-  if (cookieToken) return cookieToken;
-
   const authorization = request.headers?.authorization;
   const match = authorization?.match(/^Bearer\s+(\S+)$/i);
-  return match?.[1] ?? null;
+  if (match) return match[1];
+
+  return request.cookies?.qcc_access ?? null;
 }
 
 interface JwtPayload {
@@ -49,16 +48,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     ) {
       throw new UnauthorizedException(ErrorCode.Unauthorized);
     }
-    const member = await this.members
-      .findOne({
-        _id: payload.memberId,
-        userId: payload.sub,
-        workspaceId: payload.workspaceId,
-        active: true,
-      })
-      .select('role')
-      .lean();
-    if (!member) throw new UnauthorizedException(ErrorCode.Unauthorized);
+    const member = await this.members.findById(payload.memberId).lean();
+    if (
+      !member ||
+      member.userId.toString() !== payload.sub ||
+      member.workspaceId.toString() !== payload.workspaceId ||
+      !member.active
+    ) {
+      throw new UnauthorizedException(ErrorCode.Unauthorized);
+    }
     return {
       userId: payload.sub,
       memberId: payload.memberId,
