@@ -24,6 +24,7 @@ async function bootstrap(): Promise<void> {
     .setDescription('API nền tảng quản lý công việc agency')
     .setVersion('0.1.0')
     .addCookieAuth('qcc_access')
+    .addBearerAuth()
     .build();
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
   await app.listen(process.env.PORT ?? 3001);

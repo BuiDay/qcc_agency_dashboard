@@ -4,4 +4,6 @@ export enum ErrorCode {
   NotFound = 'NOT_FOUND',
   Conflict = 'CONFLICT',
   ValidationFailed = 'VALIDATION_FAILED',
+  TaskColumnLocked = 'TASK_COLUMN_LOCKED',
+  InvalidTaskTransition = 'INVALID_TASK_TRANSITION',
 }

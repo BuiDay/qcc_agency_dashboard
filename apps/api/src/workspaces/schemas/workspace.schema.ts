@@ -3,21 +3,23 @@ import { HydratedDocument } from 'mongoose';
 
 export type WorkspaceDocument = HydratedDocument<Workspace>;
 
-@Schema({ _id: false })
-export class WorkspaceModules {
-  @Prop({ default: false })
-  clientPortal!: boolean;
-
-  @Prop({ default: false })
-  timeTracking!: boolean;
+export interface WorkspaceModules {
+  clientPortal: boolean;
+  timeTracking: boolean;
 }
 
 @Schema({ timestamps: true, versionKey: false })
 export class Workspace {
-  @Prop({ required: true, trim: true, maxlength: 120 })
+  @Prop({ type: String, required: true, trim: true, maxlength: 120 })
   name!: string;
 
-  @Prop({ type: WorkspaceModules, default: () => ({}) })
+  @Prop({
+    type: {
+      clientPortal: { type: Boolean, default: false },
+      timeTracking: { type: Boolean, default: false },
+    },
+    default: () => ({}),
+  })
   modules!: WorkspaceModules;
 }
 

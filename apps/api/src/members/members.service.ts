@@ -1,6 +1,4 @@
-import * as bcrypt from 'bcryptjs';
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,7 +7,7 @@ import { ErrorCode } from '@qcc/shared';
 import { Model, Types } from 'mongoose';
 import { Actor } from '../common/interfaces/actor.interface';
 import { Member } from './schemas/member.schema';
-import { User } from '../users/schemas/user.schema';
+import { UsersService } from '../users/users.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 
@@ -17,7 +15,7 @@ import { UpdateMemberDto } from './dto/update-member.dto';
 export class MembersService {
   constructor(
     @InjectModel(Member.name) private readonly members: Model<Member>,
-    @InjectModel(User.name) private readonly users: Model<User>,
+    private readonly users: UsersService,
   ) {}
 
   async list(actor: Actor) {
@@ -30,30 +28,12 @@ export class MembersService {
   }
 
   async create(actor: Actor, dto: CreateMemberDto) {
-    const email = dto.email.toLowerCase();
-    if (await this.users.exists({ email })) {
-      throw new ConflictException(ErrorCode.Conflict);
-    }
-    const user = await this.users.create({
-      email,
-      name: dto.name,
-      passwordHash: await bcrypt.hash(dto.password, 12),
-    });
-    try {
-      const member = await this.members.create({
-        workspaceId: actor.workspaceId,
-        userId: user._id,
-        role: dto.role,
-      });
-      return this.members
-        .findById(member._id)
-        .populate('userId', 'email name avatar')
-        .select('-clientIds')
-        .lean();
-    } catch (error) {
-      await this.users.deleteOne({ _id: user._id });
-      throw error;
-    }
+    const { member } = await this.users.createInWorkspace(actor, dto);
+    return this.members
+      .findById(member._id)
+      .populate('userId', 'email name avatar')
+      .select('-clientIds')
+      .lean();
   }
 
   async update(actor: Actor, memberId: string, dto: UpdateMemberDto) {

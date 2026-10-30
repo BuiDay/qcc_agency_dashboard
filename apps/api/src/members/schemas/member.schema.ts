@@ -21,7 +21,7 @@ export class Member {
   @Prop({ type: [Types.ObjectId], default: [] })
   clientIds!: Types.ObjectId[];
 
-  @Prop({ default: true })
+  @Prop({ type: Boolean, default: true })
   active!: boolean;
 }
 

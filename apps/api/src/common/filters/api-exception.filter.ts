@@ -15,8 +15,13 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();
     const status = exception.getStatus();
-    const code = this.errorCode(status);
     const exceptionResponse = exception.getResponse();
+    const responseCode =
+      typeof exceptionResponse === 'string' &&
+      Object.values(ErrorCode).some((value) => value === exceptionResponse)
+        ? exceptionResponse
+        : undefined;
+    const code = responseCode ?? this.errorCode(status);
     const details =
       typeof exceptionResponse === 'object' &&
       exceptionResponse !== null &&

@@ -3,10 +3,24 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ErrorCode } from '@qcc/shared';
 import { InjectModel } from '@nestjs/mongoose';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
 import { Model, Types } from 'mongoose';
 import { Actor } from '../../common/interfaces/actor.interface';
 import { Member } from '../../members/schemas/member.schema';
+
+interface JwtRequest {
+  cookies?: Record<string, string>;
+  headers?: { authorization?: string };
+}
+
+export function extractAccessToken(request: JwtRequest): string | null {
+  const cookieToken = request.cookies?.qcc_access;
+  if (cookieToken) return cookieToken;
+
+  const authorization = request.headers?.authorization;
+  const match = authorization?.match(/^Bearer\s+(\S+)$/i);
+  return match?.[1] ?? null;
+}
 
 interface JwtPayload {
   sub: string;
@@ -21,10 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectModel(Member.name) private readonly members: Model<Member>,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: { cookies?: Record<string, string> }) =>
-          request.cookies?.qcc_access ?? null,
-      ]),
+      jwtFromRequest: extractAccessToken,
       ignoreExpiration: false,
       secretOrKey: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
     });

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { CurrentActor } from '../common/decorators/current-actor.decorator';
 import { Public } from '../common/decorators/public.decorator';
@@ -33,7 +33,11 @@ export class AuthController {
   ) {
     const result = await this.auth.login(dto);
     this.setCookies(response, result.accessToken, result.refreshToken);
-    return { user: result.user, member: result.member };
+    return {
+      accessToken: result.accessToken,
+      user: result.user,
+      member: result.member,
+    };
   }
 
   @Post('refresh')
@@ -44,7 +48,7 @@ export class AuthController {
   ) {
     const tokens = await this.auth.refresh(request.cookies?.qcc_refresh);
     this.setCookies(response, tokens.accessToken, tokens.refreshToken);
-    return { success: true };
+    return { success: true, accessToken: tokens.accessToken };
   }
 
   @Post('logout')
@@ -64,6 +68,7 @@ export class AuthController {
 
   @Get('me')
   @ApiCookieAuth('qcc_access')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   current(@CurrentActor() actor: Actor) {
     return this.auth.current(actor);

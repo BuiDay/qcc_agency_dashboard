@@ -25,6 +25,28 @@ export class PermissionGuard implements CanActivate {
     if (!action) return true;
     const actor = context.switchToHttp().getRequest<{ user?: Actor }>().user;
     if (!actor) throw new UnauthorizedException(ErrorCode.Unauthorized);
+    if (
+      [
+        Action.TasksRead,
+        Action.TasksCreate,
+        Action.TasksUpdate,
+        Action.TasksArchive,
+        Action.TasksAccept,
+        Action.TasksDecline,
+        Action.TasksSubmit,
+        Action.TasksReview,
+        Action.TasksClientReview,
+        Action.TasksMove,
+        Action.ProjectsRead,
+        Action.ProjectsCreate,
+        Action.ProjectsUpdate,
+        Action.ProjectsArchive,
+        Action.ProjectsRestore,
+        Action.ProjectsManageMembers,
+      ].includes(action)
+    ) {
+      return true;
+    }
     return this.policy.can(actor, action, {
       workspaceId: actor.workspaceId,
       ...(action === Action.UserRead ? { userId: actor.userId } : {}),

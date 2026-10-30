@@ -14,3 +14,14 @@ export enum AcceptanceStatus {
   Accepted = 'accepted',
   Declined = 'declined',
 }
+
+export enum TaskReviewResult {
+  Approved = 'approved',
+  RevisionRequired = 'revision_required',
+}
+
+export enum TaskApprovalStatus {
+  Pending = 'pending',
+  Approved = 'approved',
+  RevisionRequired = 'revision_required',
+}
